@@ -5,7 +5,10 @@ const app = express();
 const port = 3001;
 const cors = require('cors');
 const axios = require("axios");
+const pg = require("pg")
+const client = new pg.Client(process.env.DATABASE_URL)
 app.use(cors());
+app.use(express.json());
 const api_key = process.env.API_KEY;
 let result = {'title' : recipesData.title,
 'poster_path' : recipesData.poster_path , 
@@ -77,7 +80,33 @@ app.get("/top_rated", handleTopRated)
 //          })
 //             res.send(details);
 //         };
-
+app.get("/movies",handlegetmovie)
+function handlegetmovie(req,res){
+    const sql =`select * from movies;`;
+    client.query(sql)
+    .then((data) => {
+        let dataFromDB = data.rows.map((item)=>{
+            let singleMovie = new listItem(
+                item.id,
+                item.title,
+                item.release_date,
+                item.poster_path,
+                item.overview
+            )
+            return singleMovie
+        });
+        res.send(dataFromDB);
+    })
+}
+app.post("/movies",handleaddmovie)
+function handleaddmovie (req,res){
+    const list =req.body;
+    const sql = `INSERT into movies(title,release_date,poster_path,overview)values($1,$2,$3,$4)RETURNING*;`;
+    const values = [list.title,list.release_date,list.poster_path,list.overview];
+    client.query(sql,values).then((data) =>{
+        res.send(data.rows)
+    })
+}
     
 app.get("*", (req, res) => {
         res.status(500).send('Sorry, something went wrong');
@@ -86,7 +115,9 @@ app.post('*', (req, res) => {
         res.status(404).send('page not found error');
     });
 
-
-app.listen(port, () => {
-        console.log(`server is listing on port ${port}`);
-    });
+client.connect().then(()=>{
+    
+    app.listen(port, () => {
+            console.log(`server is listing on port ${port}`);
+        });
+})

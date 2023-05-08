@@ -10,9 +10,7 @@ const client = new pg.Client(process.env.DATABASE_URL)
 app.use(cors());
 app.use(express.json());
 const api_key = process.env.API_KEY;
-let result = {'title' : recipesData.title,
-'poster_path' : recipesData.poster_path , 
-'overview' : recipesData.overview};
+
 
 function listItem(id,title,release_date,poster_path,overview){
     this.id = id;
@@ -80,6 +78,9 @@ app.get("/top_rated", handleTopRated)
 //          })
 //             res.send(details);
 //         };
+
+///////////////////////////show////////////////////////////
+
 app.get("/movies",handlegetmovie)
 function handlegetmovie(req,res){
     const sql =`select * from movies;`;
@@ -98,6 +99,9 @@ function handlegetmovie(req,res){
         res.send(dataFromDB);
     })
 }
+
+///////////////////////////add////////////////////////////
+
 app.post("/movies",handleaddmovie)
 function handleaddmovie (req,res){
     const list =req.body;
@@ -107,7 +111,48 @@ function handleaddmovie (req,res){
         res.send(data.rows)
     })
 }
-    
+
+///////////////////////////update////////////////////////////
+
+app.put("/movies/:id",handleupdatemovie)
+function handleupdatemovie (req,res){
+    const thisid = req.params.id;
+    const sql = `update movies set title=$1,release_date=$2,poster_path=$3,overview=$4 where id=${thisid} returning *;`
+    const values = [req.body.title, req.body.release_date, req.body.poster_path, req.body.overview];
+    client.query(sql, values)
+      .then((data) => {
+        res.status(200).send(data.rows);
+      })
+}
+///////////////////////////delete////////////////////////////
+app.delete("/movies/:id",handledeletemovie)
+function handledeletemovie (req,res){
+    const thisid = req.params.id;
+    const sql = `delete from movies where id = ${thisid};`
+    client.query(sql)
+      .then(() => {
+        res.status(202).send(`deleted`);
+      })
+}
+
+////////////////////////////////get by id/////////////////////////
+
+app.get("/movies/:id",handlegetbyid)
+function handlegetbyid(req,res){
+    const thisid =req.params.id;
+    const sql = `select * from movies;`
+   client.query(sql)
+  .then((data)=>{
+        function databyid() { for(let i=0;i<data.rows.length;i++){
+            if (data.rows[i].id=thisid) {return data.rows[i]}
+        }}
+        res.send(databyid())
+    })
+}
+
+
+  
+///////////////////////////error handeling////////////////////////////
 app.get("*", (req, res) => {
         res.status(500).send('Sorry, something went wrong');
     });
@@ -115,6 +160,7 @@ app.post('*', (req, res) => {
         res.status(404).send('page not found error');
     });
 
+////////////////////////////////////////////////////////////////////////
 client.connect().then(()=>{
     
     app.listen(port, () => {

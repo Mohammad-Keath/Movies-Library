@@ -99,12 +99,8 @@ function handlegetmovie(req,res){
         res.send(dataFromDB);
     })
 }
-
-///////////////////////////add////////////////////////////
-
-app.post("/movies",handleaddmovie)
-function handleaddmovie (req,res){
-    const list =req.body;
+app.post("/createtable",handlecreate)
+function handlecreate (req,res){
     const sql = `DROP TABLE IF EXISTS;
     CREATE TABLE movies(
         id SERIAL PRIMARY KEY,
@@ -112,9 +108,19 @@ function handleaddmovie (req,res){
         release_date VARCHAR(255),
         poster_path VARCHAR(255),
         overview VARCHAR(255)
-    );
+    );`;
     
-    INSERT into movies(title,release_date,poster_path,overview)values($1,$2,$3,$4)RETURNING*;`;
+    client.query(sql).then((data) =>{
+        res.send('table added')
+    })
+}
+
+///////////////////////////add////////////////////////////
+
+app.post("/movies",handleaddmovie)
+function handleaddmovie (req,res){
+    const list =req.body;
+    const sql = `INSERT into movies(title,release_date,poster_path,overview)values($1,$2,$3,$4)RETURNING*;`;
     const values = [list.title,list.release_date,list.poster_path,list.overview];
     client.query(sql,values).then((data) =>{
         res.send(data.rows)

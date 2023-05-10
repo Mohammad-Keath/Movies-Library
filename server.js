@@ -21,7 +21,7 @@ function listItem(id,title,release_date,poster_path,overview){
 }
 
 app.get("/", (req, res) => {
-    res.json(result);
+    res.json("welcome to home page");
    })
 
 app.get('/favorite', (req, res) => {

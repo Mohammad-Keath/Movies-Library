@@ -114,7 +114,7 @@ function handleaddmovie (req,res){
 
 ///////////////////////////update////////////////////////////
 
-app.put("/movies/:id",handleupdatemovie)
+app.put("/update/:id",handleupdatemovie)
 function handleupdatemovie (req,res){
     const thisid = req.params.id;
     const sql = `update movies set title=$1,release_date=$2,poster_path=$3,overview=$4 where id=${thisid} returning *;`
@@ -125,7 +125,7 @@ function handleupdatemovie (req,res){
       })
 }
 ///////////////////////////delete////////////////////////////
-app.delete("/movies/:id",handledeletemovie)
+app.delete("/delete/:id",handledeletemovie)
 function handledeletemovie (req,res){
     const thisid = req.params.id;
     const sql = `delete from movies where id = ${thisid};`
@@ -137,16 +137,14 @@ function handledeletemovie (req,res){
 
 ////////////////////////////////get by id/////////////////////////
 
-app.get("/movies/:id",handlegetbyid)
+app.get("/getmovie/:id",handlegetbyid)
 function handlegetbyid(req,res){
     const thisid =req.params.id;
-    const sql = `select * from movies;`
+    const sql = `select * from movies
+    where movies.id =${thisid};`
    client.query(sql)
   .then((data)=>{
-        function databyid() { for(let i=0;i<data.rows.length;i++){
-            if (data.rows[i].id=thisid) {return data.rows[i]}
-        }}
-        res.send(databyid())
+        res.send(data.rows)
     })
 }
 
